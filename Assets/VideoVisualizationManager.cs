@@ -1,6 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public enum VideoType
 {
@@ -11,6 +16,7 @@ public enum VideoType
 
 public class VideoVisualizationManager : MonoBehaviour {
 
+    public bool hasAlternateVideo;
     public GameObject rawVideo;
     public GameObject wallVideo;
     public GameObject maskedVideo;
@@ -19,9 +25,8 @@ public class VideoVisualizationManager : MonoBehaviour {
     public GameObject maskedVideo_Interporlated;
 
     public GameObject VisulizeHelper;
-    public GameObject canvas;
 
-    private bool isInterporlated = false;
+    private bool isAlternateVideo = false;
 
     private GameObject currentVideo;
     private GameObject previousVideo;
@@ -35,22 +40,24 @@ public class VideoVisualizationManager : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-
         presentation_pos = rawVideo.transform.position;
         bystander_pos = maskedVideo.transform.position;
 
         currentVideo = rawVideo;
         previousVideo = null;
         curr_videoType = VideoType.Raw;
-        canvas.SetActive(false);
 
         videoPlayers = new List<VideoPlayerManager>();
         videoPlayers.Add(rawVideo.GetComponentInChildren<VideoPlayerManager>());
         videoPlayers.Add(wallVideo.GetComponentInChildren<VideoPlayerManager>());
         videoPlayers.Add(maskedVideo.GetComponentInChildren<VideoPlayerManager>());
-        videoPlayers.Add(rawVideo_Interporlated.GetComponentInChildren<VideoPlayerManager>());
-        videoPlayers.Add(wallVideo_Interporlated.GetComponentInChildren<VideoPlayerManager>());
-        videoPlayers.Add(maskedVideo_Interporlated.GetComponentInChildren<VideoPlayerManager>());
+
+        if (hasAlternateVideo)
+        {
+            videoPlayers.Add(rawVideo_Interporlated.GetComponentInChildren<VideoPlayerManager>());
+            videoPlayers.Add(wallVideo_Interporlated.GetComponentInChildren<VideoPlayerManager>());
+            videoPlayers.Add(maskedVideo_Interporlated.GetComponentInChildren<VideoPlayerManager>());
+        }
     }
 
     // Update is called once per frame
@@ -78,9 +85,16 @@ public class VideoVisualizationManager : MonoBehaviour {
 
         if (Input.GetKeyDown(KeyCode.B))
         {
-            isInterporlated = !isInterporlated;
-            canvas.SetActive(isInterporlated);
-            SwitchVideo(curr_videoType);
+            Scene currentScene = SceneManager.GetActiveScene();
+
+            if (currentScene.name == "Demo2016")
+            {
+                SceneManager.LoadScene("Demo2017");
+            }
+            else
+            {
+                SceneManager.LoadScene("Demo2016");
+            }
         }
     }
 
@@ -91,13 +105,13 @@ public class VideoVisualizationManager : MonoBehaviour {
         switch (type)
         {
             case VideoType.Raw:
-                currentVideo = isInterporlated ? rawVideo_Interporlated : rawVideo;
+                currentVideo = isAlternateVideo ? rawVideo_Interporlated : rawVideo;
                 break;
             case VideoType.Masked:
-                currentVideo = isInterporlated ? maskedVideo_Interporlated : maskedVideo;
+                currentVideo = isAlternateVideo ? maskedVideo_Interporlated : maskedVideo;
                 break;
             case VideoType.Wall:
-                currentVideo = isInterporlated ? wallVideo_Interporlated : wallVideo;
+                currentVideo = isAlternateVideo ? wallVideo_Interporlated : wallVideo;
                 break;
             default:
                 Debug.LogError("The Video Type doesn not make sense: " + type.ToString());
@@ -120,6 +134,23 @@ public class VideoVisualizationManager : MonoBehaviour {
     }
 }
 
+//#if UNITY_EDITOR
+
+//[CustomEditor(typeof(VideoVisualizationManager))]
+//public class VideoVisualizationManagerEditor : Editor
+//{
+//    override public void OnInspectorGUI()
+//    {
+//        var myScript = target as VideoVisualizationManager;
+
+//        myScript.hasAlternateVideo = GUILayout.Toggle(myScript.hasAlternateVideo, "Flag");
+
+//        if (myScript.hasAlternateVideo)
+//            myScript.i = EditorGUILayout.IntSlider("I field:", myScript.i, 1, 100);
+
+//    }
+//}
+//#endif
 
 /*
  * using System.Collections;
